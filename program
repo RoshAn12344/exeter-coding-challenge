@@ -1,0 +1,90 @@
+import com.opencsv.CSVWriter;
+import java.io.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Queue;
+
+
+public class Main {
+
+    public static void main(String[] args) {
+        try {
+            FileWriter writer = new FileWriter("output.txt");
+            CSVWriter CSVWriter =  CSVCreator();
+            HashMap<String, Integer> csvHash = new HashMap<>();
+
+            var hash = readingCSVFile();
+            var queue = readingTxtFile();
+
+            generatingFrequency(writer, queue, hash, csvHash);
+
+           for (var key : csvHash.keySet()) {
+               String[] csvLine = {key, hash.get(key), String.valueOf(csvHash.get(key))};
+               CSVWriter.writeNext(csvLine);
+           }
+
+            CSVWriter.flush()
+            writer.close()
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static CSVWriter CSVCreator() throws IOException {
+        CSVWriter CSVWriter = null;
+        CSVWriter = new CSVWriter(new FileWriter("frequency.csv"));
+
+        String[] header = {"English Word","French Words", "Frequency"};
+        CSVWriter.writeNext(header);
+        return CSVWriter;
+    }
+
+    public static HashMap<String, String> readingCSVFile() throws IOException {
+            BufferedReader bufCSV = new BufferedReader(new FileReader("french_dictionary.csv"));
+            HashMap<String, String > hash= new HashMap<>();
+
+            String line = bufCSV.readLine();
+            while (line != null){
+                String[] newStr = line.split(",");
+                hash.put(newStr[0], newStr[1]);
+                line = bufCSV.readLine();
+            }
+        return hash;
+
+    }
+    public static Queue<String> readingTxtFile() throws IOException {
+            BufferedReader buf = new BufferedReader(new FileReader("find_words.txt"));
+            Queue<String> queue = new ArrayDeque<>();
+            
+            String data = buf.readLine();
+            while (data != null){
+                queue.add(data);
+                data = buf.readLine();
+            }
+            return queue;
+    }
+    public static void generatingFrequency(FileWriter writer, Queue<String> queue, HashMap<String, String> hash, HashMap<String, Integer> csvHash) throws IOException {
+        while (queue.peek() != null){
+            var number = queue.peek();
+            if (hash.containsKey(number)) {
+                writer.write("\n" + hash.get(number));
+                if (csvHash.containsKey(number)) {
+                    int frequency = csvHash.get(number);
+                    csvHash.put(number, ++frequency);
+                }
+                else {
+                    csvHash.put(number, 1);
+                }
+            }
+            else
+                writer.write("null");
+            queue.remove();
+
+        }
+    }
+
+
+}
